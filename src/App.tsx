@@ -281,14 +281,18 @@ function App() {
             <Button color="primary" variant="contained" onClick={reset}>
               reset
             </Button>
-            {list.map((n: any) => (
-              <div key={n} className="item">
-                {n}
-                <IconButton aria-label="delete" onClick={() => deleteItem(n)}>
-                  <ClearIcon />
-                </IconButton>
-              </div>
-            ))}
+            <br/>
+            <br/>
+            <div className="names">
+              {list.map((n: any) => (
+                <div key={n} className="item">
+                  {n}
+                  <IconButton aria-label="delete" onClick={() => deleteItem(n)}>
+                    <ClearIcon />
+                  </IconButton>
+                </div>
+              ))}
+            </div>
           </div>
         </Grid>
       </Grid>
