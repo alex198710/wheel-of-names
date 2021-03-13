@@ -1,6 +1,6 @@
 body {
   margin: auto;
-  background-color: #282c34;
+  /*background-color: #282c34;*/
   text-align: center;
   min-height: 100vh;
   display: block;
@@ -10,6 +10,14 @@ body {
   -moz-user-select: none; /* Old versions of Firefox */
   -ms-user-select: none; /* Internet Explorer/Edge */
   user-select: none;
+}
+
+.svg {
+  height: 80%;
+}
+
+.svg .ready:hover {
+  cursor: pointer;
 }
 
 .main {
@@ -42,30 +50,10 @@ body {
   color: white;
 }
 
-button{
-  outline:none; 
-  -webkit-tap-highlight-color: transparent;
-}
-
-input[type=text] {
-  height: 2rem;
-  padding: 2px 6px;
-  margin: 8px 8px;
-  display: inline-block;
-  border: 1px solid #a3aab8;
-  border-radius: 5px;
-  box-sizing: border-box;
-}
-
-.item{
-  font-size: 2rem;
+.item {
+  font-size: 14px;
   color: #6c778d;
 }
-
-.button{
-  margin: auto 5px;
-  height: 2rem;
-  border: 1px solid #a3aab8;
-  border-radius: 5px;
-  box-sizing: border-box;
+.item button {
+  padding: 0;
 }

@@ -1,10 +1,10 @@
 import React, { Fragment, useState, useEffect } from "react"
 import { animated, useSpring } from "react-spring"
-import fireworks from 'react-fireworks'
-import Modal from '@material-ui/core/Modal'
-import { makeStyles } from '@material-ui/core/styles'
-import ClearIcon from '@material-ui/icons/Clear'
-import IconButton from '@material-ui/core/IconButton'
+import fireworks from "react-fireworks"
+import Modal from "@material-ui/core/Modal"
+import { makeStyles } from "@material-ui/core/styles"
+import ClearIcon from "@material-ui/icons/Clear"
+import { IconButton, Button, TextField, Grid } from "@material-ui/core"
 import "./App.css"
 
 var storage = window.localStorage
@@ -16,20 +16,20 @@ const storedList = storage.getItem(DEFAULT)
 const default_list = storedList
   ? JSON.parse(storedList)
   : [
-    "Millicent Drummond",
-    "Ember Bonilla",
-    "Gurdeep Hulme",
-    "Scarlett Harrison",
-    "Milan Edwards",
-    "Aishah Kouma",
-    "Arya Spooner",
-    "Ella-Louise Bone",
-    "Yuvaan Bate",
-    "Humayra Adkins",
-    "Rogan Costa",
-    "Ivy-Rose Montes",
-    "Adrian Harrell",
-    "Bronte Mcknight",
+      "Millicent Drummond",
+      "Ember Bonilla",
+      "Gurdeep Hulme",
+      "Scarlett Harrison",
+      "Milan Edwards",
+      "Aishah Kouma",
+      "Arya Spooner",
+      "Ella-Louise Bone",
+      "Yuvaan Bate",
+      "Humayra Adkins",
+      "Rogan Costa",
+      "Ivy-Rose Montes",
+      "Adrian Harrell",
+      "Bronte Mcknight",
     ]
 
 const OFFSET = 0
@@ -48,30 +48,69 @@ const map = function (
 }
 
 function getModalStyle() {
-  const top = 50;
-  const left = 50;
+  const top = 50
+  const left = 50
   return {
     top: `${top}%`,
     left: `${left}%`,
     transform: `translate(-${top}%, -${left}%)`,
-  };
+  }
 }
 
 const useStyles = makeStyles((theme) => ({
+  root: {
+    flexGrow: 1,
+  },
   paper: {
-    position: 'absolute',
+    position: "absolute",
     width: 400,
     color: "white",
     backgroundColor: "#424242",
-    border: '4px solid #000',
+    border: "4px solid #000",
     borderRadius: 5,
     boxShadow: theme.shadows[5],
     padding: theme.spacing(2, 4, 3),
   },
-}));
+}))
+
+const calculateCirclePoints = (
+  x0: number,
+  y0: number,
+  r: number,
+  nbElements: number,
+  index: number
+): { x: number; y: number }[] => {
+  const t = 360 / nbElements
+  const points = []
+  for (let i = t * index; i < t * (index + 1); i += 5) {
+    points.push(calculatePoint(x0, y0, r, i))
+  }
+  points.push(calculatePoint(x0, y0, r, t * (index + 1)))
+  return points
+}
+
+const calculatePoint = (x0: number, y0: number, r: number, i: number) => {
+  const x = x0 + r * Math.cos(i * (Math.PI / 180))
+  const y = y0 + r * Math.sin(i * (Math.PI / 180))
+  return { x, y }
+}
+
+const calculateTextPoint = (
+  x0: number,
+  y0: number,
+  r: number,
+  nbElements: number,
+  index: number
+): { x: number; y: number } => {
+  const t = 360 / nbElements
+  const lastIdx = t * (index + 1)
+  const firstIdx = t * index
+  return calculatePoint(x0, y0, r, (firstIdx + lastIdx) / 2 + 7) // 7 degrees for text height
+}
 
 function App() {
-  const r = 200
+  const cr = 200
+  const tr = 50
   const cx = 250
   const cy = 250
   const [list, setList] = useState(default_list)
@@ -104,7 +143,7 @@ function App() {
   useEffect(() => {
     if (pressed) {
       setTimeout(() => {
-        fireworks.init("fireworks",{})
+        fireworks.init("fireworks", {})
       }, 2500)
       const from = map(acc, 0, 100, 0, 700)
       const to = map(acc + power, 0, 100, 0, 700)
@@ -115,15 +154,18 @@ function App() {
         config,
         onRest: () => {
           fireworks.start()
-		      setPressed(false)
+          setPressed(false)
           const positionAfterAnimation = to % 360
-          const personElectedIdx = Math.floor(list.length * positionAfterAnimation / 360)
+          const personElectedIdx = Math.floor(
+            (list.length * positionAfterAnimation) / 360
+          )
           const personElected = list[list.length - personElectedIdx - 1]
           setWinner(personElected)
           setTimeout(() => {
             fireworks.stop()
             setTimeout(() => {
-              ;(document.querySelector("#fireworks") || {} as any).innerHTML = ""
+              ;(document.querySelector("#fireworks") || ({} as any)).innerHTML =
+                ""
             }, 10000)
           }, 5000)
         },
@@ -131,35 +173,28 @@ function App() {
       setAcc(acc + power)
     }
   }, [power, pressed])
+
   const renderItems = (numOfItems: number) => {
     let items = []
     for (let i = 0; i < numOfItems; i++) {
-      let xLength = Math.cos(2 * Math.PI * (i / numOfItems + OFFSET)) * (r - 1)
-      let yLength = Math.sin(2 * Math.PI * (i / numOfItems + OFFSET)) * (r - 1)
-      let x2Length =
-        Math.cos(2 * Math.PI * ((i + 1) / numOfItems + OFFSET)) * (r - 1)
-      let y2Length =
-        Math.sin(2 * Math.PI * ((i + 1) / numOfItems + OFFSET)) * (r - 1)
-      let txLength =
-        Math.cos(2 * Math.PI * ((i + 0.7) / numOfItems + OFFSET)) * (r / 3.5)
-      let tyLength =
-        Math.sin(2 * Math.PI * ((i + 0.7) / numOfItems + OFFSET)) * (r / 3.5)
+      const points = calculateCirclePoints(cx, cy, cr, numOfItems, i)
+      const polygonPoints = points.reduce(
+        (acc, curr) => `${acc} ${curr.x},${curr.y}`,
+        `${cx},${cy}`
+      )
+      const textPoint = calculateTextPoint(cx, cy, tr, numOfItems, i)
       items.push(
         <Fragment key={i}>
           <polygon
-            points={`${cx},${cy} ${cx + xLength},${cy + yLength} ${
-              cx + x2Length
-            },${cy + y2Length}`}
+            points={polygonPoints}
             style={{ fill: colors[i % 4], stroke: "white", strokeWidth: 2 }}
           />
           <text
-            x={cx + txLength}
-            y={cy + tyLength}
+            x={textPoint.x}
+            y={textPoint.y}
             fill={i % 2 === 1 ? "white" : "black"}
             fontSize="15px"
-            transform={`rotate(${((i + 0.5) / numOfItems + OFFSET) * 360} 
-                  ${cx + txLength},
-                  ${cy + tyLength})`}
+            transform={`rotate(${((i + 0.5) / numOfItems + OFFSET) * 360} ${textPoint.x},${textPoint.y})`}
           >
             {list[i]}
           </text>
@@ -168,42 +203,95 @@ function App() {
     }
     return items
   }
-  const classes = useStyles();
-  const [modalStyle] = React.useState(getModalStyle);
+  const start = () => {
+    setPower(100 + Math.floor(Math.random() * 100))
+    setPressed(true)
+  }
+  const classes = useStyles()
+  const [modalStyle] = React.useState(getModalStyle)
 
   return (
-    <div style={{ overflowX: "hidden" }}>
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 500 500"
-        style={{ width: "100vw", height: "80vh" }}
-      >
-        <g fill="white" stroke="lightgray" strokeWidth="0">
-          <circle cx="250" cy="250" r={r} />
-        </g>
-        <animated.g
-          style={{
-            transform: props.transform,
-            transformOrigin: "center",
-          }}
-        >
-          {renderItems(default_list.length)}
-        </animated.g>
-        <g fill="white">
-          <circle cx="250" cy="250" r="30" />
-        </g>
-        <g fill="transparent" stroke="lightgray" strokeWidth="14">
-          <circle
-            cx="250"
-            cy="250"
-            r={r}
-            style={{ clipPath: "circle(200px at 50% 50%" }}
-          />
-        </g>
-        <g fill="lightgray" stroke="black" strokeWidth="1">
-          <polygon points="430,250 470,235 470,265" />
-        </g>
-      </svg>
+    <div className={classes.root}>
+      <Grid container spacing={3}>
+        <Grid item xs={8}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 500 500"
+            className={"svg"}
+          >
+            <g fill="white" stroke="lightgray" strokeWidth="0">
+              <circle cx="250" cy="250" r={cr} />
+            </g>
+            <animated.g
+              style={{
+                transform: props.transform,
+                transformOrigin: "center",
+              }}
+              className={pressed ? "" : "ready"}
+              onClick={start}
+            >
+              {renderItems(default_list.length)}
+            </animated.g>
+            <g fill="white" className={pressed ? "" : "ready"} onClick={start}>
+              <circle cx="250" cy="250" r="30" />
+            </g>
+            {/*
+            <g fill="transparent" stroke="lightgray" strokeWidth="2">
+              <circle
+                cx="250"
+                cy="250"
+                r={cr}
+                style={{ clipPath: "circle(204px at 50% 50%" }}
+              />
+            </g>
+            */}
+            {!pressed && (
+              <>
+                <path
+                  id="curve"
+                  fill="transparent"
+                  d="M125,80c4-6.1,60.5-40.8,138.6-38.6c98.3,3.2,180.8,90.3,140.1,90"
+                />
+                <text width="500">
+                  <textPath href="#curve">
+                    Cliquer pour lancer la roue {"\u21C0"}
+                  </textPath>
+                </text>
+              </>
+            )}
+            <g fill="lightgray" stroke="black" strokeWidth="1">
+              <polygon points="430,250 470,235 470,265" />
+            </g>
+          </svg>
+        </Grid>
+        <Grid item xs={4}>
+          <div>
+            <TextField
+              variant="outlined"
+              size="small"
+              label="Nom"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            &nbsp; &nbsp;
+            <Button color="primary" variant="contained" onClick={addItem}>
+              Add
+            </Button>
+            &nbsp; &nbsp;
+            <Button color="primary" variant="contained" onClick={reset}>
+              reset
+            </Button>
+            {list.map((n: any) => (
+              <div key={n} className="item">
+                {n}
+                <IconButton aria-label="delete" onClick={() => deleteItem(n)}>
+                  <ClearIcon />
+                </IconButton>
+              </div>
+            ))}
+          </div>
+        </Grid>
+      </Grid>
       <div id="fireworks" />
       {winner && (
         <Modal
@@ -217,39 +305,20 @@ function App() {
             <p id="simple-modal-description">
               <>{`Félicitations au figeur: ${winner}`}</>
             </p>
-            <CustomButton name={"Rejouer"} onClick={() => {
-              fireworks.stop()
-              ;(document.querySelector("#fireworks") || {} as any).innerHTML = ""
-              setWinner(undefined)
-            }} />
+            <CustomButton
+              name={"Rejouer"}
+              onClick={() => {
+                fireworks.stop()
+                ;(
+                  document.querySelector("#fireworks") || ({} as any)
+                ).innerHTML = ""
+                setWinner(undefined)
+              }}
+            />
           </div>
         </Modal>
       )}
-      <CustomButton name={"Lancer"} onClick={() => {
-          setPower(100 + Math.floor(Math.random() * 100))
-          setPressed(true)
-        }} />
-      <div style={{ marginTop: "20vh", marginBottom: "5vh" }}>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <button className="button" onClick={addItem}>
-          Add
-        </button>
-        <button className="button" onClick={reset}>
-          reset
-        </button>
-        {list.map((n: any) => (
-          <div key={n} className="item">
-            {n}
-            <IconButton aria-label="delete">
-              <ClearIcon style={{ color: '#fff' }} onClick={() => deleteItem(n)} />
-            </IconButton>
-          </div>
-        ))}
-      </div>
+      {/*<CustomButton name={"Lancer"} onClick={start} />*/}
     </div>
   )
 }
